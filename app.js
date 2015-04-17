@@ -67,14 +67,14 @@ passport.use(new InstagramStrategy({
   },
   function(accessToken, refreshToken, profile, done) {
     // asynchronous verification, for effect...
-    models.User.findOrCreate({
+    models.igUser.findOrCreate({
       "name": profile.username,
       "id": profile.id,
       "access_token": accessToken 
     }, function(err, user, created) {
       
       // created will be true here
-      models.User.findOrCreate({}, function(err, user, created) {
+      models.igUser.findOrCreate({}, function(err, user, created) {
         // created will be false here
         process.nextTick(function () {
           // To keep the example simple, the user's Instagram profile is returned to
@@ -97,14 +97,14 @@ passport.use(new FacebookStrategy({
   },
   function(accessToken, refreshToken, profile, done) {
     // asynchronous verification, for effect...
-    models.User.findOrCreate({
+    models.fbUser.findOrCreate({
       "name": profile.username,
       "id": profile.id,
       "access_token": accessToken 
     }, function(err, user, created) {
       
       // created will be true here
-      models.User.findOrCreate({}, function(err, user, created) {
+      models.fbUser.findOrCreate({}, function(err, user, created) {
         // created will be false here
         process.nextTick(function () {
           // To keep the example simple, the user's Instagram profile is returned to
@@ -140,7 +140,21 @@ app.set('port', process.env.PORT || 3000);
 //   the request is authenticated (typically via a persistent login session),
 //   the request will proceed.  Otherwise, the user will be redirected to the
 //   login page.
-function ensureAuthenticated(req, res, next) {
+// function ensureAuthenticated(req, res, next) {
+//   if (req.isAuthenticated()) { 
+//     return next(); 
+//   }
+//   res.redirect('/login');
+// }
+
+function ensureAuthenticatedIG(req, res, next) {
+  if (req.isAuthenticated()) { 
+    return next(); 
+  }
+  res.redirect('/login');
+}
+
+function ensureAuthenticatedFB(req, res, next) {
   if (req.isAuthenticated()) { 
     return next(); 
   }
@@ -156,18 +170,23 @@ app.get('/login', function(req, res){
   res.render('login', { user: req.user });
 });
 
-app.get('/account', ensureAuthenticated, function(req, res){
+app.get('/accountIG', ensureAuthenticatedIG, function(req, res){
   res.render('account', {user: req.user});
 });
 
-app.get('/photos', ensureAuthenticated, function(req, res){
-  var query  = models.User.where({ name: req.user.username });
+app.get('/accountFB', ensureAuthenticatedFB, function(req, res){
+  res.render('account', {user: req.user});
+});
+
+app.get('/photos', ensureAuthenticatedIG, function(req, res){
+  var query  = models.igUser.where({ name: req.user.username });
   query.findOne(function (err, user) {
     if (err) return handleError(err);
     if (user) {
       // doc may be null if no document matched
-      Instagram.users.liked_by_self({
+      Instagram.users.self({
         access_token: user.access_token,
+        count: 200,  //results in subset of count images that are not private
         complete: function(data) {
           //Map will iterate through the returned data obj
           var imageArr = data.map(function(item) {
@@ -184,6 +203,19 @@ app.get('/photos', ensureAuthenticated, function(req, res){
     }
   });
 });
+
+app.get('/fb-photos', ensureAuthenticatedFB, function(req, res){
+  var query = models.fbUser.where({ name: req.user.username });
+  query.findOne(function (err, user) {
+    if (err) return handleError(err);
+    if (user) {
+      Facebook.setAccessToken(user.access_token);
+      Facebook.get("/"+user.id+"/cover",  function(err, res) {
+        console.log(res); 
+      });
+    }
+  });
+})
 
 
 // GET /auth/instagram
@@ -206,7 +238,7 @@ app.get('/auth/instagram',
 app.get('/auth/instagram/callback', 
   passport.authenticate('instagram', { failureRedirect: '/login'}),
   function(req, res) {
-    res.redirect('/account');
+    res.redirect('/accountIG');
   });
 
 ///// SAME IDEA FOR FACEBOOK BELOW /////
@@ -220,7 +252,7 @@ app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: '/login' }),
   function(req, res) {
     // Successful authentication, redirect home.
-    res.redirect('/account');
+    res.redirect('/accountFB');
   });
 
 app.get('/logout', function(req, res){
