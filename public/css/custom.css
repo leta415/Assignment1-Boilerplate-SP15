@@ -1,0 +1,49 @@
+.container-fluid {
+    text-align: center;
+}
+
+.imgcaption {
+    display: inline-block;
+}
+
+.img-block {
+    max-width: 306px;
+    height: 306px;
+    position: relative;
+}
+
+.img-block .caption { 
+    opacity: 0; 
+    position: absolute; 
+    height:306px; 
+    width: 306px; 
+    bottom: 0px; 
+    left: 0px; 
+    padding: 2px 0px; 
+    color: white; 
+    background: black; 
+    text-align: center; 
+    font-weight: bold; 
+}
+
+.img-block:hover .caption { 
+    opacity: 0.6; 
+}
+
+.like-button {
+    background-color: #588C7E;
+    min-width:306px;
+    min-height:40px;
+}
+
+.like-button img {
+    width: 30px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 5px;
+}
+
+.like-button:hover {
+    opacity: 0.6;
+}

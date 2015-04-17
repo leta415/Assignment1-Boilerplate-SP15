@@ -1,3 +1,13 @@
-{{#each photos}}
-  <img src="{{url}}" class="img-responsive" class="img hashtag-img">
-{{/each}}
+<div class="container-fluid">
+    {{#each photos}}
+    <div class="imgcaption">
+        <div class="img-block">
+          <img src="{{url}}" class="img-responsive" class="img hashtag-img">
+          <div class="caption"><br>{{caption}}</div>
+        </div>
+
+        <div class="like-button"><img src="img/heart.png"></div>
+    </div> 
+
+    {{/each}}
+</div>
