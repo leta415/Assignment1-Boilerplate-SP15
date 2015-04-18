@@ -2,21 +2,35 @@
     text-align: center;
 }
 
+body {
+    padding-top: 70px;
+    background-color: #ECECEA;
+}
+
+#welcome-msg {
+    font-size: 100px;
+    /*text-align: center;*/
+}
+
+#links {
+    font-size: 30px;
+}
+
 .imgcaption {
     display: inline-block;
 }
 
 .img-block {
-    max-width: 306px;
-    height: 306px;
+/*    max-width: 306px;
+    height: 306px;*/
     position: relative;
 }
 
 .img-block .caption { 
     opacity: 0; 
     position: absolute; 
-    height:306px; 
-    width: 306px; 
+/*    height:306px; 
+    width: 306px; */
     bottom: 0px; 
     left: 0px; 
     padding: 2px 0px; 
@@ -32,8 +46,8 @@
 
 .like-button {
     background-color: #588C7E;
-    min-width:306px;
-    min-height:40px;
+/*    min-width:306px;
+*/    min-height:40px;
 }
 
 .like-button img {

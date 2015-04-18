@@ -23,7 +23,6 @@ dotenv.load();
 var INSTAGRAM_CLIENT_ID = process.env.INSTAGRAM_CLIENT_ID;
 var INSTAGRAM_CLIENT_SECRET = process.env.INSTAGRAM_CLIENT_SECRET;
 var INSTAGRAM_CALLBACK_URL = process.env.INSTAGRAM_CALLBACK_URL;
-var INSTAGRAM_ACCESS_TOKEN = "";
 Instagram.set('client_id', INSTAGRAM_CLIENT_ID);
 Instagram.set('client_secret', INSTAGRAM_CLIENT_SECRET);
 
@@ -68,9 +67,9 @@ passport.use(new InstagramStrategy({
   function(accessToken, refreshToken, profile, done) {
     // asynchronous verification, for effect...
     models.igUser.findOrCreate({
-      "name": profile.username,
-      "id": profile.id,
-      "access_token": accessToken 
+      "ig_name": profile.username,
+      "ig_id": profile.id,
+      "ig_access_token": accessToken 
     }, function(err, user, created) {
       
       // created will be true here
@@ -98,9 +97,9 @@ passport.use(new FacebookStrategy({
   function(accessToken, refreshToken, profile, done) {
     // asynchronous verification, for effect...
     models.fbUser.findOrCreate({
-      "name": profile.username,
-      "id": profile.id,
-      "access_token": accessToken 
+      "fb_name": profile.username,
+      "fb_id": profile.id,
+      "fb_access_token": accessToken 
     }, function(err, user, created) {
       
       // created will be true here
@@ -148,14 +147,14 @@ app.set('port', process.env.PORT || 3000);
 // }
 
 function ensureAuthenticatedIG(req, res, next) {
-  if (req.isAuthenticated()) { 
+  if (req.isAuthenticated() && res.req.user.provider == 'instagram') { 
     return next(); 
   }
   res.redirect('/login');
 }
 
 function ensureAuthenticatedFB(req, res, next) {
-  if (req.isAuthenticated()) { 
+  if (req.isAuthenticated() && res.req.user.provider == 'facebook') { 
     return next(); 
   }
   res.redirect('/login');
@@ -171,21 +170,32 @@ app.get('/login', function(req, res){
 });
 
 app.get('/accountIG', ensureAuthenticatedIG, function(req, res){
-  res.render('account', {user: req.user});
+  // console.log(req.user);
+  var userJSON = {};
+  userJSON.name = req.user.username;
+  userJSON.msg = "Keep smiling.";
+  userJSON.links = [{url:"/photos", img:"img/camera.png", text:"View your photos in a cute layout"}];
+  res.render('account', {user: userJSON});
 });
 
 app.get('/accountFB', ensureAuthenticatedFB, function(req, res){
-  res.render('account', {user: req.user});
+  // console.log(req.user);
+  var userJSON = {};
+  userJSON.name = req.user.displayName;
+  userJSON.msg = "Looking good today.";
+  userJSON.links = [{url:"/fb-photos", img:"img/camera.png", text:"View your photos in a cute layout"}, {url:"/fb-likes", img:"img/fblike.png", text:"See something cool about your recent likes"}];
+  res.render('account', {user: userJSON});
 });
 
 app.get('/photos', ensureAuthenticatedIG, function(req, res){
-  var query  = models.igUser.where({ name: req.user.username });
+  var query  = models.igUser.where({ ig_name: req.user.username });
+  // console.log("user: " + JSON.stringify(req.user, null, 2));
   query.findOne(function (err, user) {
     if (err) return handleError(err);
     if (user) {
       // doc may be null if no document matched
       Instagram.users.self({
-        access_token: user.access_token,
+        access_token: user.ig_access_token,
         count: 200,  //results in subset of count images that are not private
         complete: function(data) {
           //Map will iterate through the returned data obj
@@ -194,6 +204,8 @@ app.get('/photos', ensureAuthenticatedIG, function(req, res){
             tempJSON = {};
             tempJSON.url = item.images.low_resolution.url;
             tempJSON.caption = item.caption.text;
+            tempJSON.width = 306;
+            tempJSON.height = 306;
             //insert json object into image array
             return tempJSON;
           });
@@ -205,13 +217,70 @@ app.get('/photos', ensureAuthenticatedIG, function(req, res){
 });
 
 app.get('/fb-photos', ensureAuthenticatedFB, function(req, res){
-  var query = models.fbUser.where({ name: req.user.username });
+  // console.log("user: " + JSON.stringify(req.user, null, 2));
+  var query = models.fbUser.where({ fb_id: req.user.id });
   query.findOne(function (err, user) {
+
     if (err) return handleError(err);
     if (user) {
-      Facebook.setAccessToken(user.access_token);
-      Facebook.get("/"+user.id+"/cover",  function(err, res) {
-        console.log(res); 
+    // console.log("found user in db");
+    // console.log(user);
+
+      Facebook.setAccessToken(user.fb_access_token);
+      // Facebook.get("/me?fields=feed",  function(err, results) {
+      Facebook.get("/"+user.fb_id + "/photos",  function(err, results) {
+        // console.log(results.data[0].images); 
+        // console.log(results.data[1].images);
+        // console.log(results.data[2].images);
+        var imageArr = results.data.map(function(item){
+          tempJSON = {};
+          tempJSON.url = item.images[item.images.length - 1].source;
+          tempJSON.caption = item.name;
+          tempJSON.width = item.images[item.images.length - 1].width;
+          tempJSON.height = item.images[item.images.length - 1].height;
+
+          return tempJSON;
+        });
+        res.render('photos', {photos: imageArr});
+      });
+    }
+  });
+})
+
+app.get('/fb-likes', ensureAuthenticatedFB, function(req, res){
+  // console.log("user: " + JSON.stringify(req.user, null, 2));
+  var query = models.fbUser.where({ fb_id: req.user.id });
+  query.findOne(function (err, user) {
+
+    if (err) return handleError(err);
+    if (user) {
+
+      Facebook.setAccessToken(user.fb_access_token);
+      Facebook.get("/"+user.fb_id + "/likes",  function(err, results) {
+        //count word frequencies {word1:count1, word2:count2, ...}
+        var likesJSON = {};
+        for (i = 0; i < results.data.length; i++) {
+          likesJSON[results.data[i].category] = likesJSON[results.data[i].category] ? (likesJSON[results.data[i].category] + 1) : 1;
+          likesJSON[results.data[i].name] = likesJSON[results.data[i].name] ? (likesJSON[results.data[i].name] + 1) : 1;
+        }
+
+        //sort categories by most popular [[word, count], [word, count], ...]
+        var sortedArray = [];
+        for(likeWord in likesJSON){
+          sortedArray.push([likeWord, likesJSON[likeWord]])
+        }
+        sortedArray.sort(function(a,b){return b[1] - a[1]});
+
+        // convert sortedArray to render [{word:w1, count:c1}, {word:w2, count:c2}, ...]
+        var sortedArrayJSON = sortedArray.map(function(item){
+          tempJSON = {};
+          tempJSON.word = item[0];
+          tempJSON.count = item[1];
+          tempJSON.fontSize = item[1]*20;
+          return tempJSON;
+        });
+
+        res.render('likes', {likes: sortedArrayJSON});
       });
     }
   });
@@ -245,7 +314,7 @@ app.get('/auth/instagram/callback',
 
 // GET /auth/facebook
 app.get('/auth/facebook',
-  passport.authenticate('facebook'));
+  passport.authenticate('facebook', {scope: ['user_photos', 'user_likes']}));
 
 // GET /auth/facebook/callback
 app.get('/auth/facebook/callback',

@@ -1,12 +1,12 @@
 <div class="container-fluid">
     {{#each photos}}
     <div class="imgcaption">
-        <div class="img-block">
+        <div class="img-block" style="height:{{height}}px; width:{{width}}px">
           <img src="{{url}}" class="img-responsive" class="img hashtag-img">
-          <div class="caption"><br>{{caption}}</div>
+          <div class="caption" style="height:{{height}}px; width:{{width}}px"><br>{{caption}}</div>
         </div>
 
-        <div class="like-button"><img src="img/heart.png"></div>
+        <div class="like-button" style="width:{{width}}px"><img src="img/heart.png"></div>
     </div> 
 
     {{/each}}

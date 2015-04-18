@@ -1,4 +1,22 @@
-hello account
-<p>ID: {{user.id}}</p>
-<p>Username: {{user.username}}</p>
-<p>Name:{{user.displayName}}</p>
+<div class="container-fluid">
+
+    <div id="welcome-msg">
+        <p>Hello, {{user.name}}!</p>
+        <p>{{user.msg}}</p>
+    </div>
+
+    <div id="links">
+        {{#each user.links}}
+        <br>
+        <a href="{{url}}">
+            <!-- <img src="{{img}}" width="200" heigh="200"> -->
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4"><button type="button" class="btn btn-info btn-block">{{text}}</button></div>
+                <div class="col-md-4"></div>
+            </div>
+        </a>
+        {{/each}}
+    </div>
+
+</div>
