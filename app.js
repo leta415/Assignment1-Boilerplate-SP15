@@ -209,7 +209,7 @@ app.get('/photos', ensureAuthenticatedIG, function(req, res){
             //insert json object into image array
             return tempJSON;
           });
-          res.render('photos', {photos: imageArr, backlink: {url:"/accountIG"}});
+          res.render('photos', {photos: imageArr, backlink: {url:"/accountIG"}, containerClass: {name:"container-fluid"}});
         }
       }); 
     }
@@ -241,7 +241,7 @@ app.get('/fb-photos', ensureAuthenticatedFB, function(req, res){
 
           return tempJSON;
         });
-        res.render('photos', {photos: imageArr, backlink: {url:"/accountFB"}});
+        res.render('photos', {photos: imageArr, backlink: {url:"/accountFB"}, containerClass: {name:"container"}});
       });
     }
   });

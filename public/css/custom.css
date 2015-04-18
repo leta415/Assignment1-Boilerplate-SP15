@@ -7,6 +7,10 @@ body {
     background-color: #ECECEA;
 }
 
+#loginContainer {
+    margin-top: 10%;
+}
+
 .top-nav {
     margin-bottom: 20px;
 }
