@@ -3,8 +3,12 @@
 }
 
 body {
-    padding-top: 70px;
+    padding-top: 20px;
     background-color: #ECECEA;
+}
+
+.top-nav {
+    margin-bottom: 20px;
 }
 
 #welcome-msg {

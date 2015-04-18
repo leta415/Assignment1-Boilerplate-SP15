@@ -209,7 +209,7 @@ app.get('/photos', ensureAuthenticatedIG, function(req, res){
             //insert json object into image array
             return tempJSON;
           });
-          res.render('photos', {photos: imageArr});
+          res.render('photos', {photos: imageArr, backlink: {url:"/accountIG"}});
         }
       }); 
     }
@@ -241,7 +241,7 @@ app.get('/fb-photos', ensureAuthenticatedFB, function(req, res){
 
           return tempJSON;
         });
-        res.render('photos', {photos: imageArr});
+        res.render('photos', {photos: imageArr, backlink: {url:"/accountFB"}});
       });
     }
   });
@@ -280,7 +280,7 @@ app.get('/fb-likes', ensureAuthenticatedFB, function(req, res){
           return tempJSON;
         });
 
-        res.render('likes', {likes: sortedArrayJSON});
+        res.render('likes', {likes: sortedArrayJSON, backlink: {url:"/accountFB"}});
       });
     }
   });
